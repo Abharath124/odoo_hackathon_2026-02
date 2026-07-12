@@ -1,11 +1,13 @@
 @import "tailwindcss";
 
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
 @utility bg-mesh-gradient {
-  background-color: #150f2e;
+  background-color: #0b1129;
   background-image: 
-    radial-gradient(at 0% 0%, rgba(219, 39, 119, 0.4) 0px, transparent 60%),
-    radial-gradient(at 70% 30%, rgba(79, 70, 229, 0.4) 0px, transparent 65%),
+    radial-gradient(at 0% 0%, rgba(249, 115, 22, 0.35) 0px, transparent 60%),
+    radial-gradient(at 70% 30%, rgba(37, 99, 235, 0.4) 0px, transparent 65%),
     radial-gradient(at 100% 100%, rgba(249, 115, 22, 0.4) 0px, transparent 70%),
-    radial-gradient(at 0% 100%, rgba(139, 92, 246, 0.4) 0px, transparent 60%);
+    radial-gradient(at 0% 100%, rgba(59, 130, 246, 0.35) 0px, transparent 60%);
   background-size: cover;
 }
