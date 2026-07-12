@@ -46,7 +46,12 @@ function Dashboard() {
   const location = useLocation()
 
   const role = user?.role || 'fleet_manager'
-  const defaultTab = location.state?.defaultTab || ROLE_DEFAULT_TAB[role]
+  const SESSION_KEY = `activeNav_${role}`
+
+  const defaultTab = location.state?.defaultTab
+    || sessionStorage.getItem(SESSION_KEY)
+    || ROLE_DEFAULT_TAB[role]
+
   const [activeNav, setActiveNav] = useState(defaultTab)
 
   // Role-gated nav click — silently block tabs not in allowed list
@@ -54,6 +59,7 @@ function Dashboard() {
     const allowed = ROLE_ALLOWED_TABS[role] || []
     if (allowed.includes(label)) {
       setActiveNav(label)
+      sessionStorage.setItem(SESSION_KEY, label)
     }
   }
 

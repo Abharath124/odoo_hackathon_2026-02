@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import api from '../../services/api'
 import { useAuth } from '../../context/AuthContext'
+import { showSuccess, showError, showWarning } from '../../components/Toast/ToastProvider'
 
 function TripsTab({ onProfileClick }) {
   const { user } = useAuth()
@@ -67,7 +68,7 @@ function TripsTab({ onProfileClick }) {
     e.preventDefault()
     if (isWeightExceeded) return
     if (!source || !destination || !cargoWeight || !plannedDistance || !selectedVehicleId || !selectedDriverId) {
-      alert("Please fill all creation fields!")
+      showWarning('Please fill all creation fields!')
       return
     }
 
@@ -82,22 +83,22 @@ function TripsTab({ onProfileClick }) {
 
     try {
       await api.post('/trips', payload)
-      alert('Trip successfully dispatched!')
+      showSuccess('Trip successfully dispatched!')
       loadData()
       handleCancel()
     } catch (err) {
-      alert(err.message || 'Failed to dispatch trip.')
+      showError(err.message || 'Failed to dispatch trip.')
     }
   }
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this trip?")) return
+    if (!window.confirm('Are you sure you want to delete this trip?')) return
     try {
       await api.delete(`/trips/${id}`)
-      alert("Trip deleted successfully!")
+      showSuccess('Trip deleted successfully!')
       loadData()
     } catch (err) {
-      alert(err.message || 'Failed to delete trip.')
+      showError(err.message || 'Failed to delete trip.')
     }
   }
 
