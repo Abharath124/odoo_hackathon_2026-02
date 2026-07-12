@@ -23,6 +23,11 @@ const User = sequelize.define('User', {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  role: {
+    type: DataTypes.ENUM('fleet_manager', 'driver', 'safety_officer', 'financial_analyst'),
+    allowNull: false,
+    defaultValue: 'driver',
+  },
   otp: {
     type: DataTypes.STRING,
     allowNull: true,

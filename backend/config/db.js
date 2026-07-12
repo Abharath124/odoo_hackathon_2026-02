@@ -16,6 +16,10 @@ const connectDB = async () => {
   try {
     await sequelize.authenticate()
     console.log('MySQL connected successfully.')
+
+    // Import all models to register them before sync
+    require('../models/index')
+
     await sequelize.sync({ alter: true })
     console.log('All models synced with database.')
   } catch (error) {

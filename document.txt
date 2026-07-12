@@ -1,0 +1,536 @@
+For an 8-hour Odoo hackathon, don't make all four target users independent. Instead, make one main administrator who manages the system and use RBAC (Role Based Access Control) to restrict pages. This is simpler, faster, and looks professional.
+
+Overall User Flow
+Login
+   │
+   ▼
+Fleet Manager (Admin)
+   │
+   ├── Create Users
+   │      │
+   │      ├── Driver
+   │      ├── Safety Officer
+   │      └── Financial Analyst
+   │
+   └── Manage Entire Platform
+Roles (4)
+1. Fleet Manager (Admin)
+
+Full access.
+
+Responsible for:
+
+Dashboard
+Users
+Vehicles
+Drivers
+Trips
+Maintenance
+Fuel
+Expenses
+Reports
+
+This is the main user.
+
+2. Driver
+
+Limited access.
+
+Can
+
+View assigned trips
+Start trip
+Complete trip
+Enter final odometer
+Enter fuel consumed
+
+Cannot
+
+Add vehicles
+Delete trips
+View financial reports
+Create users
+3. Safety Officer
+
+Responsible for driver compliance.
+
+Can
+
+View drivers
+Update safety score
+Suspend driver
+Renew license
+View expiry alerts
+
+Cannot
+
+Manage expenses
+Manage vehicles
+Dispatch trips
+4. Financial Analyst
+
+Responsible for money.
+
+Can
+
+View fuel logs
+View maintenance cost
+View expenses
+Reports
+Analytics
+Export CSV
+
+Cannot
+
+Create trips
+Edit vehicles
+Manage users
+Screens
+1. Login
+
+Everyone logs in.
+
+↓
+
+Role identified.
+
+↓
+
+Redirect to dashboard.
+
+Fleet Manager Flow
+Dashboard
+
+Shows
+
+Active Vehicles
+Vehicles Available
+Vehicles in Shop
+Active Trips
+Pending Trips
+Drivers Available
+Fleet Utilization
+
+↓
+
+Go to Users
+
+↓
+
+Go to Vehicles
+
+↓
+
+Go to Drivers
+
+↓
+
+Go to Trips
+
+↓
+
+Go to Maintenance
+
+↓
+
+Go to Fuel
+
+↓
+
+Go to Expenses
+
+↓
+
+Reports
+
+Screen 2
+User Management
+
+Fleet Manager creates users.
+
+Create User
+
+↓
+
+Name
+
+Email
+
+Password
+
+Role
+
+↓
+
+Save
+
+Example
+
+Alex
+
+Driver
+John
+
+Safety Officer
+David
+
+Financial Analyst
+Screen 3
+Vehicle Registry
+
+Fleet Manager
+
+↓
+
+Add Vehicle
+
+Fields
+
+Registration Number
+Vehicle Name
+Vehicle Type
+Max Capacity
+Acquisition Cost
+Odometer
+Status
+
+↓
+
+Save
+
+Business Rule
+
+Registration Number must be unique.
+
+Screen 4
+Driver Management
+
+Fleet Manager
+
+↓
+
+Add Driver
+
+Fields
+
+Name
+License Number
+Category
+Expiry
+Contact
+Safety Score
+Status
+
+↓
+
+Save
+
+Screen 5
+Trip Management
+
+Fleet Manager
+
+↓
+
+Create Trip
+
+Choose
+
+Source
+Destination
+Vehicle
+Driver
+Cargo Weight
+Distance
+
+↓
+
+Validation
+
+Vehicle available?
+
+Driver available?
+
+License valid?
+
+Capacity enough?
+
+↓
+
+Dispatch
+
+↓
+
+Vehicle Status
+
+On Trip
+
+↓
+
+Driver Status
+
+On Trip
+
+Exactly as specified in the workflow.
+
+Driver Flow
+
+Driver logs in.
+
+Dashboard
+
+↓
+
+Assigned Trips
+
+↓
+
+Open Trip
+
+↓
+
+Start Trip
+
+↓
+
+Complete Trip
+
+↓
+
+Enter
+
+Final Odometer
+Fuel Used
+
+↓
+
+Submit
+
+↓
+
+Vehicle Available
+
+↓
+
+Driver Available
+
+Screen 6
+Maintenance
+
+Fleet Manager
+
+↓
+
+Vehicle
+
+↓
+
+Issue
+
+↓
+
+Start Maintenance
+
+↓
+
+Vehicle automatically
+
+"In Shop"
+
+↓
+
+Cannot dispatch
+
+↓
+
+Maintenance Complete
+
+↓
+
+Vehicle
+
+Available
+
+Screen 7
+Fuel Log
+
+Fleet Manager
+
+or
+
+Driver
+
+↓
+
+Trip
+
+↓
+
+Fuel
+
+↓
+
+Cost
+
+↓
+
+Save
+
+Screen 8
+Expense Management
+
+Fleet Manager
+
+↓
+
+Vehicle
+
+↓
+
+Expense Type
+
+Toll
+Repair
+Service
+Insurance
+
+↓
+
+Amount
+
+↓
+
+Save
+
+Safety Officer Flow
+
+Login
+
+↓
+
+Dashboard
+
+↓
+
+Drivers
+
+↓
+
+License Expiry
+
+↓
+
+Safety Score
+
+↓
+
+Suspend Driver
+
+↓
+
+Renew License
+
+Business Rule
+
+Expired license
+
+↓
+
+Cannot assign trip.
+
+Financial Analyst Flow
+
+Login
+
+↓
+
+Dashboard
+
+↓
+
+Fuel Logs
+
+↓
+
+Expenses
+
+↓
+
+Maintenance Cost
+
+↓
+
+Reports
+
+↓
+
+CSV Export
+
+Reports
+
+Charts
+
+Fuel Efficiency
+Fleet Utilization
+Operational Cost
+Vehicle ROI
+
+↓
+
+Export CSV
+
+(PDF optional)
+
+Navigation Structure
+Dashboard
+
+├── Users
+├── Vehicles
+├── Drivers
+├── Trips
+├── Maintenance
+├── Fuel Logs
+├── Expenses
+├── Reports
+└── Settings
+Complete System Flow
+Login
+      │
+      ▼
+Fleet Manager
+      │
+      ├── Create Users
+      │
+      ├── Register Vehicles
+      │
+      ├── Register Drivers
+      │
+      ├── Create Trip
+      │
+      ├── Dispatch Trip
+      │        │
+      │        ├── Vehicle → On Trip
+      │        └── Driver → On Trip
+      │
+      ├── Driver Completes Trip
+      │        │
+      │        ├── Fuel Log
+      │        ├── Odometer
+      │        └── Vehicle → Available
+      │
+      ├── Maintenance
+      │        │
+      │        ├── Vehicle → In Shop
+      │        └── Complete → Available
+      │
+      ├── Expenses
+      │
+      └── Reports
+Recommended page allocation
+Role	Screens
+Fleet Manager (Admin)	9 (Dashboard, Users, Vehicles, Drivers, Trips, Maintenance, Fuel Logs, Expenses, Reports)
+Driver	2 (Dashboard, My Trips)
+Safety Officer	2 (Dashboard, Driver Compliance)
+Financial Analyst	2 (Dashboard, Financial Reports)
+
+This design fully covers the problem statement while keeping the project manageable within the hackathon time limit. It also demonstrates proper RBAC, business rule enforcement, and clear separation of responsibilities, which are likely to score well with judges.

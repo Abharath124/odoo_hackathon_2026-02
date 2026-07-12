@@ -9,19 +9,20 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const token = getToken()
+    const storedRole = localStorage.getItem('role')
     if (token) {
       try {
-        // Decode JWT payload (no verification — just read user info)
         const payload = JSON.parse(atob(token.split('.')[1]))
-        // Check if token is expired
         if (payload.exp * 1000 < Date.now()) {
           removeToken()
+          localStorage.removeItem('role')
           setUser(null)
         } else {
-          setUser({ id: payload.id, token })
+          setUser({ id: payload.id, role: storedRole, token })
         }
       } catch {
         removeToken()
+        localStorage.removeItem('role')
         setUser(null)
       }
     }
@@ -30,11 +31,13 @@ export function AuthProvider({ children }) {
 
   const login = (data) => {
     saveToken(data.token)
-    setUser({ id: data.user.id, name: data.user.name, email: data.user.email, token: data.token })
+    localStorage.setItem('role', data.user.role)
+    setUser({ id: data.user.id, name: data.user.name, email: data.user.email, role: data.user.role, token: data.token })
   }
 
   const logout = () => {
     removeToken()
+    localStorage.removeItem('role')
     setUser(null)
   }
 
