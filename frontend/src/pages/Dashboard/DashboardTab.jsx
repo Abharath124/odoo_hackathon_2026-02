@@ -1,8 +1,18 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
+import api from '../../services/api'
 
 function DashboardTab({ onProfileClick }) {
   const { user } = useAuth()
+  const [stats, setStats] = useState(null)
+  const [statsError, setStatsError] = useState('')
+
+  useEffect(() => {
+    api.get('/dashboard/stats')
+      .then(setStats)
+      .catch(e => setStatsError(e.message))
+  }, [])
+
   // Timeline list
   const timelineItems = [
     { time: '09:42', vehicle: 'VAN-07', status: 'On Trip', driver: 'Marcus Chen', route: 'Downtown - Airport', eta: '14 min' },
@@ -104,10 +114,10 @@ function DashboardTab({ onProfileClick }) {
           <div className="flex justify-center items-center my-6 relative">
             <svg className="w-32 h-32" viewBox="0 0 36 36">
               <path className="text-slate-200" strokeWidth="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-              <path className="text-amber-500" strokeDasharray="87, 100" strokeWidth="3" strokeLinecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+              <path className="text-amber-500" strokeDasharray={`${stats ? stats.fleetUtilization.toFixed(0) : 0}, 100`} strokeWidth="3" strokeLinecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
             </svg>
             <div className="absolute flex flex-col items-center">
-              <span className="text-2xl font-black tracking-tight text-slate-800">87</span>
+              <span className="text-2xl font-black tracking-tight text-slate-800">{stats ? stats.fleetUtilization.toFixed(0) : '—'}</span>
               <span className="text-[9px] font-bold text-slate-400">/ 100</span>
             </div>
           </div>
@@ -118,16 +128,16 @@ function DashboardTab({ onProfileClick }) {
             </span>
             <div className="grid grid-cols-3 gap-2 border-t border-slate-100 pt-4">
               <div>
-                <span className="text-xs font-bold text-emerald-600 block">28</span>
-                <span className="text-[9px] font-bold text-slate-400 uppercase">Excellent</span>
+                <span className="text-xs font-bold text-emerald-600 block">{stats ? stats.availableVehicles : '—'}</span>
+                <span className="text-[9px] font-bold text-slate-400 uppercase">Available</span>
               </div>
               <div>
-                <span className="text-xs font-bold text-amber-500 block">14</span>
-                <span className="text-[9px] font-bold text-slate-400 uppercase">Good</span>
+                <span className="text-xs font-bold text-amber-500 block">{stats ? stats.vehiclesOnTrip : '—'}</span>
+                <span className="text-[9px] font-bold text-slate-400 uppercase">On Trip</span>
               </div>
               <div>
-                <span className="text-xs font-bold text-rose-500 block">5</span>
-                <span className="text-[9px] font-bold text-slate-400 uppercase">Poor</span>
+                <span className="text-xs font-bold text-rose-500 block">{stats ? stats.vehiclesInShop : '—'}</span>
+                <span className="text-[9px] font-bold text-slate-400 uppercase">In Shop</span>
               </div>
             </div>
           </div>
@@ -136,14 +146,14 @@ function DashboardTab({ onProfileClick }) {
         {/* Small stats cards grid (col-span-8) */}
         <div className="lg:col-span-8 grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { val: '47', desc: 'Active Vehicles', trend: '+2', trendColor: 'text-emerald-500', sparkColor: '#3b82f6' },
-            { val: '23', desc: 'Available Now', trend: '+5%', trendColor: 'text-emerald-500', sparkColor: '#10b981' },
-            { val: '5', desc: 'In Maintenance', trend: '+1', trendColor: 'text-rose-500', sparkColor: '#f59e0b' },
-            { val: '128', desc: 'Trips Today', trend: '+12%', trendColor: 'text-emerald-500', sparkColor: '#8b5cf6' },
-            { val: '41', desc: 'Drivers On Duty', trend: '+3', trendColor: 'text-emerald-500', sparkColor: '#6366f1' },
-            { val: '$12.8K', desc: 'Fuel Cost MTD', trend: '-3%', trendColor: 'text-rose-500', sparkColor: '#d97706' },
-            { val: '$84.2K', desc: 'Revenue MTD', trend: '+8%', trendColor: 'text-emerald-500', sparkColor: '#10b981' },
-            { val: '$31.6K', desc: 'Operational Cost', trend: '+2%', trendColor: 'text-rose-500', sparkColor: '#ef4444' },
+            { val: stats ? stats.totalVehicles : '—', desc: 'Total Vehicles', trend: '', trendColor: 'text-emerald-500', sparkColor: '#3b82f6' },
+            { val: stats ? stats.availableVehicles : '—', desc: 'Available Now', trend: '', trendColor: 'text-emerald-500', sparkColor: '#10b981' },
+            { val: stats ? stats.vehiclesInShop : '—', desc: 'In Maintenance', trend: '', trendColor: 'text-rose-500', sparkColor: '#f59e0b' },
+            { val: stats ? stats.activeTrips : '—', desc: 'Active Trips', trend: '', trendColor: 'text-emerald-500', sparkColor: '#8b5cf6' },
+            { val: stats ? stats.totalDrivers : '—', desc: 'Total Drivers', trend: '', trendColor: 'text-emerald-500', sparkColor: '#6366f1' },
+            { val: stats ? stats.availableDrivers : '—', desc: 'Drivers Available', trend: '', trendColor: 'text-emerald-500', sparkColor: '#d97706' },
+            { val: stats ? stats.pendingTrips : '—', desc: 'Pending Trips', trend: '', trendColor: 'text-amber-500', sparkColor: '#10b981' },
+            { val: stats ? stats.completedTrips : '—', desc: 'Completed Trips', trend: '', trendColor: 'text-emerald-500', sparkColor: '#ef4444' },
           ].map((card, idx) => (
             <div key={idx} className="bg-slate-50/60 border border-slate-100 rounded-2xl p-4 flex flex-col justify-between shadow-sm">
               <div className="flex items-center justify-between text-[10px] font-bold text-slate-400">

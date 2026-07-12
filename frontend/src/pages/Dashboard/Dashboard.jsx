@@ -28,16 +28,16 @@ const ROLE_DEFAULT_TAB = {
 const ROLE_ALLOWED_TABS = {
   fleet_manager: [
     'Dashboard', 'Fleet', 'Drivers', 'Trips', 'Maintenance',
-    'Fuel & Expenses', 'Analytics', 'Users', 'AI Copilot', 'Settings', 'Profile',
+    'Fuel & Expenses', 'Analytics', 'Users', 'Settings', 'Profile',
   ],
   driver: [
-    'Dashboard', 'My Trips', 'Fuel Log', 'AI Copilot', 'Profile',
+    'Dashboard', 'My Trips', 'Fuel Log', 'Profile',
   ],
   safety_officer: [
-    'Dashboard', 'Drivers', 'Compliance', 'AI Copilot', 'Profile',
+    'Dashboard', 'Drivers', 'Compliance', 'Profile',
   ],
   financial_analyst: [
-    'Dashboard', 'Fuel & Expenses', 'Analytics', 'Reports', 'AI Copilot', 'Profile',
+    'Dashboard', 'Fuel & Expenses', 'Analytics', 'Reports', 'Profile',
   ],
 }
 
@@ -73,7 +73,6 @@ function Dashboard() {
         case 'Users':           return <UsersTab onProfileClick={toProfile} />
         case 'Settings':        return <SettingsTab onProfileClick={toProfile} />
         case 'Profile':         return <ProfileTab />
-        case 'AI Copilot':      return <ComingSoon label="AI Copilot" />
         default:                return <ComingSoon label={activeNav} />
       }
     }
@@ -84,7 +83,6 @@ function Dashboard() {
         case 'Dashboard':  return <DashboardTab onProfileClick={toProfile} />
         case 'My Trips':   return <MyTripsTab onProfileClick={toProfile} />
         case 'Fuel Log':   return <DriverFuelLogTab onProfileClick={toProfile} />
-        case 'AI Copilot': return <ComingSoon label="AI Copilot" />
         case 'Profile':    return <ProfileTab />
         default:           return <Unauthorized />
       }
@@ -96,7 +94,6 @@ function Dashboard() {
         case 'Dashboard':  return <DashboardTab onProfileClick={toProfile} />
         case 'Drivers':    return <DriversTab onProfileClick={toProfile} readOnly />
         case 'Compliance': return <ComplianceTab onProfileClick={toProfile} />
-        case 'AI Copilot': return <ComingSoon label="AI Copilot" />
         case 'Profile':    return <ProfileTab />
         default:           return <Unauthorized />
       }
@@ -109,7 +106,6 @@ function Dashboard() {
         case 'Fuel & Expenses': return <FuelExpensesTab onProfileClick={toProfile} />
         case 'Analytics':       return <AnalyticsTab onProfileClick={toProfile} />
         case 'Reports':         return <ComingSoon label="Reports" />
-        case 'AI Copilot':      return <ComingSoon label="AI Copilot" />
         case 'Profile':         return <ProfileTab />
         default:                return <Unauthorized />
       }

@@ -87,16 +87,16 @@ const icons = {
 const NAV_BY_ROLE = {
   fleet_manager: [
     'Dashboard', 'Fleet', 'Drivers', 'Trips', 'Maintenance',
-    'Fuel & Expenses', 'Analytics', 'Users', 'AI Copilot', 'Settings', 'Profile',
+    'Fuel & Expenses', 'Analytics', 'Users', 'Settings', 'Profile',
   ],
   driver: [
-    'Dashboard', 'My Trips', 'Fuel Log', 'AI Copilot', 'Profile',
+    'Dashboard', 'My Trips', 'Fuel Log', 'Profile',
   ],
   safety_officer: [
-    'Dashboard', 'Drivers', 'Compliance', 'AI Copilot', 'Profile',
+    'Dashboard', 'Drivers', 'Compliance', 'Profile',
   ],
   financial_analyst: [
-    'Dashboard', 'Fuel & Expenses', 'Analytics', 'Reports', 'AI Copilot', 'Profile',
+    'Dashboard', 'Fuel & Expenses', 'Analytics', 'Reports', 'Profile',
   ],
 }
 

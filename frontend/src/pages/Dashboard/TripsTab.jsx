@@ -1,43 +1,58 @@
-import { useState } from 'react'
-
-// Available Vehicles Mock data with capacity
-const availableVehicles = [
-  { id: 'VAN-05', name: 'VAN-05 (500 kg capacity)', capacity: 500 },
-  { id: 'TRUCK-11', name: 'TRUCK-11 (5,000 kg capacity)', capacity: 5000 },
-  { id: 'MINI-03', name: 'MINI-03 (1,000 kg capacity)', capacity: 1000 },
-]
-
-// Available Drivers Mock data
-const availableDrivers = [
-  { id: 'Alex', name: 'Alex' },
-  { id: 'Steve', name: 'Steve' },
-  { id: 'Priya', name: 'Priya' },
-]
-
-// Live Board default mock trips
-const defaultLiveTrips = [
-  { id: 'TR001', vehicle: 'VAN-05', driver: 'ALEX', route: 'Gandhinagar Depot -> Ahmedabad Hub', status: 'Dispatched', eta: '45 min' },
-  { id: 'TR004', vehicle: 'TRUCK-04', driver: 'SURESH', route: 'Vatva Industrial Area -> Sanand Warehouse', status: 'Draft', eta: 'Awaiting driver' },
-  { id: 'TR006', vehicle: 'Unassigned', driver: 'Unassigned', route: 'Mansa -> Kalol Depot', status: 'Cancelled', eta: 'Vehicle went to shop' },
-]
+import { useState, useEffect } from 'react'
+import api from '../../services/api'
+import { useAuth } from '../../context/AuthContext'
 
 function TripsTab({ onProfileClick }) {
-  const [liveTrips, setLiveTrips] = useState(defaultLiveTrips)
+  const { user } = useAuth()
+  const [trips, setTrips] = useState([])
+  const [vehicles, setVehicles] = useState([])
+  const [drivers, setDrivers] = useState([])
+  const [loading, setLoading] = useState(true)
 
   // Form Inputs
   const [source, setSource] = useState('Gandhinagar Depot')
   const [destination, setDestination] = useState('Ahmedabad Hub')
-  const [selectedVehicleId, setSelectedVehicleId] = useState('VAN-05')
-  const [selectedDriver, setSelectedDriver] = useState('Alex')
+  const [selectedVehicleId, setSelectedVehicleId] = useState('')
+  const [selectedDriverId, setSelectedDriverId] = useState('')
   const [cargoWeight, setCargoWeight] = useState('700')
   const [plannedDistance, setPlannedDistance] = useState('38')
 
   // Find capacity of selected vehicle
-  const currentVehicleObj = availableVehicles.find(v => v.id === selectedVehicleId)
-  const vehicleCapacity = currentVehicleObj ? currentVehicleObj.capacity : 0
+  const currentVehicleObj = vehicles.find(v => String(v.id) === String(selectedVehicleId))
+  const vehicleCapacity = currentVehicleObj ? currentVehicleObj.max_capacity : 0
   const inputWeight = parseFloat(cargoWeight) || 0
   const isWeightExceeded = inputWeight > vehicleCapacity
   const exceededBy = inputWeight - vehicleCapacity
+
+  const loadData = async () => {
+    try {
+      setLoading(true)
+      const [tripsData, vehiclesData, driversData] = await Promise.all([
+        api.get('/trips'),
+        api.get('/vehicles'),
+        api.get('/drivers')
+      ])
+
+      setTrips(tripsData)
+      
+      const availableVehicles = vehiclesData.filter(v => v.status === 'available')
+      const availableDrivers = driversData.filter(d => d.status === 'available')
+      
+      setVehicles(availableVehicles)
+      setDrivers(availableDrivers)
+
+      if (availableVehicles.length > 0) setSelectedVehicleId(availableVehicles[0].id)
+      if (availableDrivers.length > 0) setSelectedDriverId(availableDrivers[0].id)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadData()
+  }, [])
 
   // Handle Form Cancel
   const handleCancel = () => {
@@ -48,27 +63,55 @@ function TripsTab({ onProfileClick }) {
   }
 
   // Handle dispatch click
-  const handleDispatch = (e) => {
+  const handleDispatch = async (e) => {
     e.preventDefault()
     if (isWeightExceeded) return
-    if (!source || !destination || !cargoWeight || !plannedDistance) {
+    if (!source || !destination || !cargoWeight || !plannedDistance || !selectedVehicleId || !selectedDriverId) {
       alert("Please fill all creation fields!")
       return
     }
 
-    const newTripId = `TR00${liveTrips.length + 5}`
-    const newTrip = {
-      id: newTripId,
-      vehicle: selectedVehicleId,
-      driver: selectedDriver.toUpperCase(),
-      route: `${source} -> ${destination}`,
-      status: 'Dispatched',
-      eta: `${Math.floor(Math.random() * 90) + 15} min`,
+    const payload = {
+      source,
+      destination,
+      vehicle_id: parseInt(selectedVehicleId),
+      driver_id: parseInt(selectedDriverId),
+      cargo_weight: parseFloat(cargoWeight),
+      distance: parseFloat(plannedDistance)
     }
 
-    setLiveTrips([newTrip, ...liveTrips])
-    alert(`Trip ${newTripId} successfully dispatched!`)
-    handleCancel()
+    try {
+      await api.post('/trips', payload)
+      alert('Trip successfully dispatched!')
+      loadData()
+      handleCancel()
+    } catch (err) {
+      alert(err.message || 'Failed to dispatch trip.')
+    }
+  }
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this trip?")) return
+    try {
+      await api.delete(`/trips/${id}`)
+      alert("Trip deleted successfully!")
+      loadData()
+    } catch (err) {
+      alert(err.message || 'Failed to delete trip.')
+    }
+  }
+
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case 'active':
+        return 'bg-blue-500/15 text-blue-500 border border-blue-200/50'
+      case 'pending':
+        return 'bg-slate-105 text-slate-500 border border-slate-250/70'
+      case 'completed':
+        return 'bg-emerald-50 text-emerald-500 border border-emerald-100/70'
+      default:
+        return 'bg-slate-100 text-slate-600'
+    }
   }
 
   return (
@@ -94,10 +137,10 @@ function TripsTab({ onProfileClick }) {
           onClick={onProfileClick}
           className="flex items-center gap-3 cursor-pointer hover:opacity-85 transition duration-150"
         >
-          <span className="text-sm font-semibold text-slate-700">Raven K.</span>
-          <span className="bg-blue-50 text-blue-600 px-3 py-1 rounded-lg text-xs font-bold border border-blue-100">Dispatcher</span>
+          <span className="text-sm font-semibold text-slate-700">{user?.name}</span>
+          <span className="bg-blue-50 text-blue-600 px-3 py-1 rounded-lg text-xs font-bold border border-blue-100 capitalize">{user?.role}</span>
           <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center font-bold text-sm text-white shadow-lg shadow-blue-600/20">
-            RK
+            {user?.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
           </div>
         </div>
       </div>
@@ -166,11 +209,15 @@ function TripsTab({ onProfileClick }) {
                 <select
                   value={selectedVehicleId}
                   onChange={(e) => setSelectedVehicleId(e.target.value)}
-                  className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-semibold text-slate-600 outline-none hover:bg-slate-100 transition cursor-pointer"
+                  className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-semibold text-slate-650 outline-none hover:bg-slate-100 transition cursor-pointer"
                 >
-                  {availableVehicles.map(v => (
-                    <option key={v.id} value={v.id}>{v.name}</option>
-                  ))}
+                  {vehicles.length > 0 ? (
+                    vehicles.map(v => (
+                      <option key={v.id} value={v.id}>{v.vehicle_name} ({v.max_capacity} kg capacity)</option>
+                    ))
+                  ) : (
+                    <option value="">No vehicles available</option>
+                  )}
                 </select>
               </div>
 
@@ -178,13 +225,17 @@ function TripsTab({ onProfileClick }) {
               <div className="flex flex-col gap-1">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Driver (Available Only)</label>
                 <select
-                  value={selectedDriver}
-                  onChange={(e) => setSelectedDriver(e.target.value)}
-                  className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-semibold text-slate-600 outline-none hover:bg-slate-100 transition cursor-pointer"
+                  value={selectedDriverId}
+                  onChange={(e) => setSelectedDriverId(e.target.value)}
+                  className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-semibold text-slate-650 outline-none hover:bg-slate-100 transition cursor-pointer"
                 >
-                  {availableDrivers.map(d => (
-                    <option key={d.id} value={d.id}>{d.name}</option>
-                  ))}
+                  {drivers.length > 0 ? (
+                    drivers.map(d => (
+                      <option key={d.id} value={d.id}>{d.name}</option>
+                    ))
+                  ) : (
+                    <option value="">No drivers available</option>
+                  )}
                 </select>
               </div>
             </div>
@@ -218,7 +269,7 @@ function TripsTab({ onProfileClick }) {
             </div>
 
             {/* Capacity Validation alert feedback */}
-            {cargoWeight && (
+            {cargoWeight && selectedVehicleId && (
               <div className={`p-4 rounded-2xl border text-xs font-semibold ${isWeightExceeded ? 'bg-rose-50 border-rose-100 text-rose-600' : 'bg-emerald-50 border-emerald-100 text-emerald-600'}`}>
                 <div>Vehicle Capacity: {vehicleCapacity} kg</div>
                 <div>Cargo Weight: {inputWeight} kg</div>
@@ -244,8 +295,8 @@ function TripsTab({ onProfileClick }) {
             <div className="flex gap-4 pt-2">
               <button
                 type="submit"
-                disabled={isWeightExceeded}
-                className={`flex-1 font-bold py-3 rounded-xl text-xs transition cursor-pointer shadow-lg ${isWeightExceeded ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-755 text-white shadow-indigo-600/10'}`}
+                disabled={isWeightExceeded || !selectedVehicleId || !selectedDriverId}
+                className={`flex-1 font-bold py-3 rounded-xl text-xs transition cursor-pointer shadow-lg ${isWeightExceeded || !selectedVehicleId || !selectedDriverId ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-755 text-white shadow-indigo-600/10'}`}
               >
                 {isWeightExceeded ? 'Dispatch (disabled)' : 'Dispatch'}
               </button>
@@ -266,51 +317,53 @@ function TripsTab({ onProfileClick }) {
         <div className="lg:col-span-7 flex flex-col justify-start">
           <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-6">Live Board</h2>
           
-          <div className="space-y-4">
-            {liveTrips.map((trip) => {
-              const getBadgeStyle = (status) => {
-                switch (status) {
-                  case 'Dispatched':
-                    return 'bg-blue-500/15 text-blue-500 border border-blue-200/50'
-                  case 'Draft':
-                    return 'bg-slate-100 text-slate-500 border border-slate-250/70'
-                  case 'Cancelled':
-                    return 'bg-rose-50 text-rose-500 border border-rose-100/70'
-                  default:
-                    return 'bg-slate-100 text-slate-600'
-                }
-              }
-
-              return (
-                <div key={trip.id} className="border border-slate-100 hover:border-slate-200/80 rounded-2xl p-5 shadow-sm bg-slate-50/30 hover:bg-slate-50 transition duration-150 flex flex-col">
+          {loading ? (
+            <div className="text-slate-400 font-medium py-8 text-center">Loading Live Board trips...</div>
+          ) : (
+            <div className="space-y-4 max-h-[500px] overflow-y-auto pr-1">
+              {trips.map((trip) => (
+                <div key={trip.id} className="border border-slate-105 hover:border-slate-200 rounded-2xl p-5 shadow-sm bg-slate-50/30 hover:bg-slate-50 transition duration-150 flex flex-col relative group">
                   
+                  {/* Delete button (only visible on hover for clean UX) */}
+                  {user?.role === 'fleet_manager' && (
+                    <button
+                      onClick={() => handleDelete(trip.id)}
+                      className="absolute top-4 right-4 text-slate-300 hover:text-rose-500 transition duration-150 cursor-pointer hidden group-hover:block"
+                      title="Delete Trip"
+                    >
+                      <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  )}
+
                   {/* Top line with Trip ID & Vehicle/Driver details */}
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-bold text-indigo-600">{trip.id}</span>
-                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">
-                      {trip.vehicle} / {trip.driver}
+                    <span className="text-xs font-bold text-indigo-600">TRIP #{trip.id}</span>
+                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wide mr-8">
+                      {trip.vehicle?.vehicle_name || 'Unassigned'} / {trip.driver?.name || 'Unassigned'}
                     </span>
                   </div>
 
                   {/* Route text */}
                   <div className="text-sm font-bold text-slate-800 mb-4">
-                    {trip.route}
+                    {trip.source} &rarr; {trip.destination}
                   </div>
 
-                  {/* Status & ETA */}
+                  {/* Status & Details */}
                   <div className="flex items-center justify-between mt-1">
-                    <span className={`inline-block px-3.5 py-1.5 rounded-lg text-xs font-bold ${getBadgeStyle(trip.status)}`}>
+                    <span className={`inline-block px-3.5 py-1.5 rounded-lg text-xs font-bold capitalize ${getStatusBadge(trip.status)}`}>
                       {trip.status}
                     </span>
-                    <span className="text-xs font-semibold text-slate-400">
-                      {trip.eta}
+                    <span className="text-[11px] font-bold text-slate-400">
+                      {trip.distance} km &bull; {trip.cargo_weight} kg
                     </span>
                   </div>
 
                 </div>
-              )
-            })}
-          </div>
+              ))}
+            </div>
+          )}
 
           {/* Bottom workflow instruction rules */}
           <div className="mt-8 pt-4 border-t border-slate-100 text-xs font-semibold text-slate-400 tracking-wide">
