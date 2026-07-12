@@ -7,6 +7,6 @@ const authorizeRoles = require('../middleware/roleMiddleware')
 // Protect all routes with authentication
 router.use(authMiddleware)
 
-router.get('/stats', authorizeRoles('fleet_manager'), getDashboardStats)
+router.get('/stats', authorizeRoles('fleet_manager', 'driver', 'safety_officer', 'financial_analyst'), getDashboardStats)
 
 module.exports = router

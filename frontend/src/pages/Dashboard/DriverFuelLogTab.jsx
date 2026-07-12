@@ -18,25 +18,14 @@ function DriverFuelLogTab({ onProfileClick }) {
       setLoading(true)
       const myTrips = await api.get('/trips/my')
       setTrips(myTrips)
-      
-      // Auto select first completed trip if available
       const completed = myTrips.filter(t => t.status === 'completed')
-      if (completed.length > 0) {
-        setTripId(completed[0].id)
-      }
+      if (completed.length > 0) setTripId(completed[0].id)
 
-      // Construct a history list of fuel logs from the driver's own completed trips containing fuel details
-      const logs = myTrips
-        .filter(t => t.status === 'completed' && t.fuel_used > 0)
-        .map((t, idx) => ({
-          id: idx + 1,
-          trip_id: t.id,
-          fuel_amount: t.fuel_used,
-          cost_per_unit: 1.5,
-          total_cost: t.fuel_used * 1.5,
-          createdAt: t.updatedAt || new Date().toISOString()
-        }))
-      setFuelLogs(logs)
+      // Fetch real fuel logs from backend
+      const allLogs = await api.get('/fuel-logs')
+      // Filter to only logs belonging to this driver's trips
+      const myTripIds = new Set(myTrips.map(t => t.id))
+      setFuelLogs(allLogs.filter(l => myTripIds.has(l.trip_id)))
     } catch (err) {
       console.error(err)
     } finally {
@@ -199,7 +188,7 @@ function DriverFuelLogTab({ onProfileClick }) {
                   {fuelLogs.length > 0 ? (
                     fuelLogs.map((log) => (
                       <tr key={log.id} className="hover:bg-slate-50 transition duration-150">
-                        <td className="py-3.5 px-2 font-bold text-indigo-600">TR00{log.trip_id}</td>
+                        <td className="py-3.5 px-2 font-bold text-indigo-600">#{log.trip_id}</td>
                         <td className="py-3.5 px-2 font-semibold">{log.fuel_amount} L</td>
                         <td className="py-3.5 px-2 font-semibold">${log.cost_per_unit}</td>
                         <td className="py-3.5 px-2 font-black text-slate-700">${log.total_cost.toFixed(2)}</td>

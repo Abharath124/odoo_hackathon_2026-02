@@ -3,7 +3,7 @@ const { connectDB } = require('./config/db')
 require('dotenv').config()
 
 // Import all models here so Sequelize registers them before sync
-require('./models/User')
+require('./models/index')
 
 const PORT = process.env.PORT || 5000
 

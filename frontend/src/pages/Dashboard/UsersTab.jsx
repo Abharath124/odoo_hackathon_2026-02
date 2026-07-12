@@ -24,7 +24,7 @@ function UsersTab({ onProfileClick }) {
   const [searchQuery, setSearchQuery] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editUser, setEditUser] = useState(null)
-  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'driver' })
+  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'driver', license_number: '', category: 'LMV', license_expiry: '', contact: '' })
 
   const fetchUsers = () => {
     setLoading(true)
@@ -38,13 +38,13 @@ function UsersTab({ onProfileClick }) {
 
   const openCreate = () => {
     setEditUser(null)
-    setForm({ name: '', email: '', password: '', role: 'driver' })
+    setForm({ name: '', email: '', password: '', role: 'driver', license_number: '', category: 'LMV', license_expiry: '', contact: '' })
     setIsModalOpen(true)
   }
 
   const openEdit = (u) => {
     setEditUser(u)
-    setForm({ name: u.name, email: u.email, password: '', role: u.role })
+    setForm({ name: u.name, email: u.email, password: '', role: u.role, license_number: '', category: 'LMV', license_expiry: '', contact: '' })
     setIsModalOpen(true)
   }
 
@@ -52,11 +52,18 @@ function UsersTab({ onProfileClick }) {
     e.preventDefault()
     try {
       if (editUser) {
-        // updateUser only accepts name and role
         await api.put(`/users/${editUser.id}`, { name: form.name, role: form.role })
         showSuccess('User updated successfully.')
       } else {
-        await api.post('/users', { name: form.name, email: form.email, password: form.password, role: form.role })
+        await api.post('/users', {
+          name: form.name, email: form.email, password: form.password, role: form.role,
+          ...(form.role === 'driver' && {
+            license_number: form.license_number,
+            category: form.category,
+            license_expiry: form.license_expiry,
+            contact: form.contact,
+          })
+        })
         showSuccess('User created successfully.')
       }
       setIsModalOpen(false)
@@ -211,6 +218,44 @@ function UsersTab({ onProfileClick }) {
                   {ROLES.map(r => <option key={r} value={r}>{roleLabel(r)}</option>)}
                 </select>
               </div>
+              {/* Driver-specific fields */}
+              {!editUser && form.role === 'driver' && (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">License No.</label>
+                      <input type="text" required value={form.license_number}
+                        onChange={e => setForm({ ...form, license_number: e.target.value })}
+                        placeholder="e.g. DL-001"
+                        className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 outline-none focus:border-indigo-500 transition" />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Category</label>
+                      <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}
+                        className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-600 outline-none cursor-pointer">
+                        <option value="LMV">LMV</option>
+                        <option value="HMV">HMV</option>
+                        <option value="HGV">HGV</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">License Expiry</label>
+                      <input type="date" required value={form.license_expiry}
+                        onChange={e => setForm({ ...form, license_expiry: e.target.value })}
+                        className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 outline-none focus:border-indigo-500 transition" />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Contact</label>
+                      <input type="text" required value={form.contact}
+                        onChange={e => setForm({ ...form, contact: e.target.value })}
+                        placeholder="e.g. 9876543210"
+                        className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 outline-none focus:border-indigo-500 transition" />
+                    </div>
+                  </div>
+                </>
+              )}
               <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl text-sm transition mt-2 cursor-pointer shadow-lg shadow-indigo-600/10">
                 {editUser ? 'Save Changes' : 'Create User'}
               </button>

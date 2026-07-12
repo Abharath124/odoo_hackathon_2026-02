@@ -14,7 +14,7 @@ router.use(authMiddleware)
 
 router.route('/')
   .post(authorizeRoles('fleet_manager', 'driver'), addFuelLog)
-  .get(authorizeRoles('fleet_manager', 'financial_analyst'), getAllFuelLogs)
+  .get(authorizeRoles('fleet_manager', 'financial_analyst', 'driver'), getAllFuelLogs)
 
 router.route('/:id')
   .get(getFuelLogById)

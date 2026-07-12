@@ -1,5 +1,5 @@
 const bcrypt = require('bcryptjs')
-const { User } = require('../models')
+const { User, Driver } = require('../models')
 
 // Create User (name, email, password, role)
 const createUser = async (req, res) => {
@@ -29,6 +29,29 @@ const createUser = async (req, res) => {
       role,
       is_verified: true, // Provisioned directly by Fleet Manager
     })
+
+    // Auto-create Driver record when role is driver
+    if (role === 'driver') {
+      const { license_number, category, license_expiry, contact } = req.body
+      if (!license_number || !category || !license_expiry || !contact) {
+        await user.destroy()
+        return res.status(400).json({ message: 'Driver role requires license_number, category, license_expiry, and contact.' })
+      }
+      const existingDriver = await Driver.findOne({ where: { license_number } })
+      if (existingDriver) {
+        await user.destroy()
+        return res.status(409).json({ message: 'Driver with this license number already exists.' })
+      }
+      await Driver.create({
+        name,
+        license_number,
+        category,
+        license_expiry,
+        contact,
+        safety_score: 100,
+        status: 'available',
+      })
+    }
 
     const userResponse = {
       id: user.id,

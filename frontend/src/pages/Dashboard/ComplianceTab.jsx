@@ -35,7 +35,14 @@ function ComplianceTab({ onProfileClick }) {
 
     const driver = drivers[selectedDriverIndex]
     try {
-      await api.patch(`/drivers/${driver.id}/suspend`)
+      if (driver.status === 'suspended') {
+        await api.patch(`/drivers/${driver.id}/renew-license`, {
+          license_expiry: driver.license_expiry
+        })
+        await api.put(`/drivers/${driver.id}`, { status: 'available' })
+      } else {
+        await api.patch(`/drivers/${driver.id}/suspend`)
+      }
       alert(`${driver.name} status updated successfully!`)
       fetchDrivers()
       setSelectedDriverIndex(null)

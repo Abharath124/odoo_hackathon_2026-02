@@ -2,8 +2,7 @@ const BASE_URL = 'http://localhost:5000/api'
 
 const getToken = () => {
   try {
-    const u = JSON.parse(localStorage.getItem('auth_user'))
-    return u?.token || ''
+    return localStorage.getItem('token') || ''
   } catch {
     return ''
   }
