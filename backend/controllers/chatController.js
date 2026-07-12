@@ -1,7 +1,11 @@
 const Groq = require('groq-sdk')
 const { Vehicle, Driver, Trip, FuelLog, Expense, Maintenance } = require('../models')
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
+let groq
+const getGroq = () => {
+  if (!groq) groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
+  return groq
+}
 
 const chat = async (req, res) => {
   try {
@@ -59,7 +63,7 @@ If asked something outside fleet management, politely redirect to fleet topics.
 Current Fleet Data:
 ${JSON.stringify(fleetData, null, 2)}`
 
-    const completion = await groq.chat.completions.create({
+    const completion = await getGroq().chat.completions.create({
       model: 'llama-3.3-70b-versatile',
       messages: [
         { role: 'system', content: systemPrompt },
